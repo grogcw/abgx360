@@ -9,6 +9,7 @@
 //---------------------------------------------------------------------------
 
 #pragma once
+// Main window class definition used across all platforms.
 
 // PRECOMPILED_HEADERS
 // https://docs.wxwidgets.org/3.0/page_multiplatform.html
