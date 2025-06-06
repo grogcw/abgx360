@@ -1,0 +1,26 @@
+import { VerticalBox, HorizontalBox, LineEdit, Button, CheckBox } from "std-widgets.slint";
+export component AppWindow inherits Window {
+    in property <string> input_path;
+    callback browse();
+    callback run();
+
+    title: "abgx360 Reloaded GUI";
+    width: 400px;
+    height: 200px;
+
+    VerticalBox {
+        spacing: 8px;
+        padding: 8px;
+        HorizontalBox {
+            spacing: 4px;
+            LineEdit { text: input_path; } 
+            Button { text: "Browse"; clicked => { browse(); } }
+        }
+        CheckBox { text: "Verify"; checked: true; }
+        CheckBox { text: "Check Stealth"; checked: true; }
+        HorizontalBox {
+            alignment: center;
+            Button { text: "Run"; clicked => { run(); } }
+        }
+    }
+}
