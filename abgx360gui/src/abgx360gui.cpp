@@ -67,6 +67,8 @@ wxCommandEvent dummy_event;
 // Utils
 //----------------------------------------------------------------------------
 
+// Utility that creates a horizontal or vertical sizer and populates it with the
+// provided controls. This helps reduce duplicate layout code.
 wxBoxSizer *generate_box_sizer_with_controls(
 	const std::list<wxWindow *> &controls,
 	int sizer_flags = wxRIGHT,
@@ -85,6 +87,8 @@ wxBoxSizer *generate_box_sizer_with_controls(
   return sizer;
 }
 
+// Load an embedded PNG resource into a wxBitmap. The resources are bundled at
+// compile time so this works across all supported platforms.
 wxBitmap bitmap_from_resource(const std::string &path) {
   wxImage wx_image = wxImage();
   auto resource_file = resource_fs.open(path);
@@ -93,6 +97,8 @@ wxBitmap bitmap_from_resource(const std::string &path) {
   return {wx_image};
 }
 
+// Escapes a filename so it can be safely used on the command line.
+// This helper is useful on all platforms.
 std::string escape_filename(const std::string &filename) {
   wxString _temp = filename;
 
@@ -109,6 +115,8 @@ std::string escape_filename(const std::string &filename) {
   return _temp.ToStdString();
 }
 
+// Wraps a command so it will execute inside a new terminal window.
+// Behaviour differs slightly per platform depending on the terminal binary.
 std::string wrap_command(const std::string &terminal, const std::string &cmd) {
   std::string wrapped = "";
 
@@ -119,11 +127,20 @@ std::string wrap_command(const std::string &terminal, const std::string &cmd) {
   escaped_cmd.Replace("\\\"", "\\\\\"", true);
 
   if (terminal.compare("gnome-terminal") == 0) {
-	wrapped = terminal + " --geometry 80x400+0+0 -- sh -c '" + escaped_cmd.ToStdString() + "'";
+        wrapped = terminal + " --geometry 80x400+0+0 -- sh -c '" + escaped_cmd.ToStdString() + "'";
   } else if (terminal.compare("xterm") == 0 || terminal.compare("uxterm") == 0) {
-	wrapped = terminal + " -bg black -geometry 80x400+0+0 -e '" + escaped_cmd.ToStdString() + "'";
+        wrapped = terminal + " -bg black -geometry 80x400+0+0 -e '" + escaped_cmd.ToStdString() + "'";
+  } else if (terminal.compare("cmd") == 0) {
+        // Windows command prompt
+        wrapped = "cmd /c \"" + escaped_cmd.ToStdString() + "\"";
+  } else if (terminal.compare("powershell") == 0) {
+        // Windows PowerShell
+        wrapped = "powershell -NoExit -Command \"" + escaped_cmd.ToStdString() + "\"";
+  } else if (terminal.compare("open") == 0) {
+        // macOS Terminal
+        wrapped = "open -a Terminal --args sh -c '" + escaped_cmd.ToStdString() + "'";
   } else {
-	wrapped = terminal + " --geometry 80x400+0+0 -e '" + escaped_cmd.ToStdString() + "'";
+        wrapped = terminal + " --geometry 80x400+0+0 -e '" + escaped_cmd.ToStdString() + "'";
   }
 
   wxMessageBox(wrapped);
@@ -140,6 +157,7 @@ BEGIN_EVENT_TABLE(InfoTip, wxPanel)EVT_ENTER_WINDOW(InfoTip::onMouseOver) EVT_PA
 END_EVENT_TABLE()
 ////Event Table End
 
+// Small helper panel that shows an information tooltip when hovered.
 InfoTip::InfoTip(wxWindow *parent, const wxBitmap &label, const wxString &info_text, const wxPoint &pos = wxDefaultPosition, const wxSize &size = wxDefaultSize) : wxPanel(parent,
 																																										   wxID_ANY,
 																																										   pos,
@@ -149,11 +167,13 @@ InfoTip::InfoTip(wxWindow *parent, const wxBitmap &label, const wxString &info_t
   this->SetMinSize(wxSize(16, 16));
 }
 
+// Triggered when the mouse pointer enters the panel. Display the tooltip.
 void InfoTip::onMouseOver(wxMouseEvent &WXUNUSED(event)) {
   icon_bounds = this->GetScreenRect();
   new wxTipWindow(this, m_info_text, 400, nullptr, &icon_bounds);
 }
 
+// Draw the bitmap representing the tooltip icon.
 void InfoTip::onPaint(wxPaintEvent &event) {
   wxPaintDC dc(this);
   dc.DrawBitmap(mLabel, 0, 0, true);
